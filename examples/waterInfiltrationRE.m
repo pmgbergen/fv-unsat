@@ -34,7 +34,7 @@ Lx = 1;     Ly = 1;     Lz = 1;           % domain lenght [m]
 G = cartGrid([nx, ny, nz], [Lx, Ly, Lz]); % create Cartesian Grid
 G = computeGeometry(G);                   % compute geometry
 
-%Plotting grid
+% Plotting grid
 newplot; plotGrid(G); axis off; 
 pbaspect([1, 1, 5]); view([-51, 26]);
 
@@ -65,13 +65,13 @@ z_min = find(zf == 0);             % top faces idx
 z_max = find(zf > 0.9999*Lz & zf < 1.0001*Lz ); % bottom faces idx
 
 % Creating the boundary structure
-psiT = -75 * centi * meter;    % Top boundary pressure head
-psiB = -1000 * centi * meter;  % Bottom boundary pressure head
-bc = addBC([], z_min, 'pressure', psiT);       
-bc = addBC(bc, z_max, 'pressure', psiB);      
-bcVal = zeros(G.faces.num, 1);
-bcVal(z_min) = psiT + zetaf(z_min);  % assigning Top boundary
-bcVal(z_max) = psiB + zetaf(z_max);  % assigning Bottom boundary
+psiT         = -75 * centi * meter;    % Top boundary pressure head
+psiB         = -1000 * centi * meter;  % Bottom boundary pressure head
+bc           = addBC([], z_min, 'pressure', psiT);       
+bc           = addBC(bc, z_max, 'pressure', psiB);      
+bcVal        = zeros(G.faces.num, 1);
+bcVal(z_min) = psiT + zetaf(z_min);    % assigning Top boundary
+bcVal(z_max) = psiB + zetaf(z_max);    % assigning Bottom boundary
 % Note that we are adding the gravity contributions to bcVal. This must
 % be done for every Dirichlet face only to bcVal, not to bc.
 
@@ -84,10 +84,10 @@ mpfa_discr = mpfa(G, phys.flow, [], 'bc', bc, 'invertBlocks', 'matlab');
 %% Time parameters
 time_param = struct();                  % Initialize time params struct
 time_param.simTime  = 72 * hour;        % final simulation time
-time_param.tau_init = 10 * second;      % initial time step
-time_param.tau_min  = 10 * second;      % minimum time step 
-time_param.tau_max  = 10000 * second;   % maximum time step
-time_param.tau  = time_param.tau_init;  % initializing time step
+time_param.dt_init = 10 * second;      % initial time step
+time_param.dt_min  = 10 * second;      % minimum time step 
+time_param.dt_max  = 10000 * second;   % maximum time step
+time_param.dt  = time_param.dt_init;  % initializing time step
 time_param.time = 0;                    % initializing current time
 
 %% Printing parameters
@@ -110,7 +110,7 @@ solver_param.maxIter = 10;  % maximum number of iterations
 while time_param.time < time_param.simTime
     
     psi_n = psi;  % current time step (n-index)
-    time_param.time = time_param.time + time_param.tau;  % current time
+    time_param.time = time_param.time + time_param.dt;  % current time
     source = zeros(G.cells.num,1);  % source term equal to zero
             
     % Newton loop
@@ -118,7 +118,7 @@ while time_param.time < time_param.simTime
         solver_param, source);
                     
     % Determine next time step
-    [time_param.tau, print_param.print] = timeStepping(time_param, ...
+    [time_param.dt, print_param.print] = timeStepping(time_param, ...
         print_param, iter);
     
     % Storing solutions at each printing time
@@ -127,15 +127,12 @@ while time_param.time < time_param.simTime
             'time', time_param.time, ...
             'pressureHead', psi, ...
             'waterContent', modelEqs.theta(psi), ...
-            'waterFlux', modelEqs.Q(psi, psi_m) ...
+            'flux', modelEqs.Q(psi, psi_m) ...
         );
         print_param.export = print_param.export + 1;           
     end
     
 end
-
-% Displaying "sol" structure in console
-fprintf('\n sol: \n'); disp(sol); 
 
 %% Plotting pressure head and water content profiles 
 for ii=1:print_param.levels
