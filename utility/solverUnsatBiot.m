@@ -61,7 +61,7 @@ while (res > solver_param.tol) && (iter <= solver_param.maxIter)
     eq1 = modelEqs.uEq1(u_ad);
     eq2 = modelEqs.uEq2(p_ad, p_n, sourceMech);
     eq3 = modelEqs.pEq1(p_n, u_ad, u_n);
-    eq4 = modelEqs.pEq2(p_ad, p_n, p_m, time_param.tau, sourceFlow);
+    eq4 = modelEqs.pEq2(p_ad, p_n, p_m, time_param.dt, sourceFlow);
     
     J = [eq1.jac{1} eq2.jac{1}; eq3.jac{1} eq4.jac{1}]; % Jacobian
     R = [eq1.val + eq2.val; eq3.val + eq4.val]; % Residual

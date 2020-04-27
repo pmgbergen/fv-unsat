@@ -37,7 +37,7 @@ numCells = [10, 20, 40, 80, 160]'; % number of cells
 timeLevels = [10, 10, 10, 10, 10]'; % time levels
 
 h = 1 ./ numCells; % spatial mesh size
-tau = 1 ./ timeLevels; % time step
+dt = 1 ./ timeLevels; % time step
 
 errorPsi = zeros(length(numCells), 1); % L2 error psi
 errorFlux = zeros(length(numCells), 1); % L2 error flux
@@ -45,7 +45,7 @@ errorFlux = zeros(length(numCells), 1); % L2 error flux
 % Looping to obtain the errors
 for ii=1:length(errorPsi)
     fprintf('\nPerforming simulation for h = %f and dt = %f\n', ...
-        h(ii), tau(ii));
+        h(ii), dt(ii));
     [errorPsi(ii), errorFlux(ii)] = ...
         convergenceRE(numCells(ii), timeLevels(ii));
 end
@@ -59,7 +59,7 @@ RatePsi = log2(RedPsi);
 RateFlux = log2(RedFlux);
 
 %% Printing results
-table(h, tau, ...
+table(h, dt, ...
     errorPsi, [nan; RedPsi], [nan; RatePsi], ...
     errorFlux,  [nan; RedFlux], [nan; RateFlux], ...
 'VariableNames', {...

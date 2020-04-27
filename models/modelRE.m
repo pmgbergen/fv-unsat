@@ -1,4 +1,4 @@
-function [model] = modelRE(G, phys, mpfa_discr, bc, bcVal, relPermMethod, gEffects)
+function model = modelRE(G, phys, mpfa_discr, bc, bcVal, relPermMethod, gEffects)
 % Parent model for incompressible Richards' Equation 
 %
 % SYNOPSIS:
@@ -79,7 +79,7 @@ Q = @(psi, psi_m) (phys.flow.gamma ./ phys.flow.mu) .* krw_faces(psi_m) .* ...
     (F(psi + gravOn * zetac) + boundF(bcVal));
 
 % Mass Conservation Equation                         
-psiEq = @(psi, psi_n, psi_m, tau, source)  (V ./ tau) .* (theta(psi_m) ...
+psiEq = @(psi, psi_n, psi_m, dt, source)  (V ./ dt) .* (theta(psi_m) ...
     + C_theta(psi_m) .* (psi - psi_m) - theta(psi_n)) ...
     + divF(Q(psi, psi_m)) - V .* source;
 

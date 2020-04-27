@@ -49,7 +49,7 @@ psi_ad = initVariablesADI(psi_n);
 while (res > solver_param.tol) && (iter <= solver_param.maxIter)
     
     psi_m = psi_ad.val; % current iteration level (m-index)
-    eq = modelEqs.psiEq(psi_ad, psi_n, psi_m, time_param.tau, ...
+    eq = modelEqs.psiEq(psi_ad, psi_n, psi_m, time_param.dt, ...
         source); % call equation from model
     R = eq.val; % residual
     J = eq.jac{1}; % Jacobian

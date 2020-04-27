@@ -30,43 +30,43 @@ clear; clc(); mrstModule add fv-unsat fvbiot distmesh
 %% Creating grid
 
 % Two-dimensional grid
-r = 50 * milli * meter; % radii of the Petri-dish
-fd =@(p) sqrt(sum(p.^2, 2)) - r; % circular domain function
-min_x = -r;  max_x = r; % min and max values in x-axis
-min_y = -r;  max_y = r; % min and max values in y-axis                  
-h = (2*r)/25; % step size
+r     = 50 * milli * meter;           % radii of the Petri-dish
+fd    = @(p) sqrt(sum(p.^2, 2)) - r;  % circular domain function
+min_x = -r;  max_x = r;               % min and max values in x-axis
+min_y = -r;  max_y = r;               % min and max values in y-axis                  
+h = (2*r)/25;                         % step size
 [p, t] = distmesh2d(fd, @huniform, h, [min_x, min_y; max_x, max_y], []);
-p = p + r; % shifting triangulation points
-G = triangleGrid(p, t); % creating triangular grid
-G = pebi(G); % creaing Voronoi diagram
+p = p + r;                            % shifting triangulation points
+G = triangleGrid(p, t);               % creating triangular grid
+G = pebi(G);                          % creaing Voronoi diagram
 
 % Extrude in the z-direction
-Lz = 15 * milli * meter; % thickness of the Petri-dish
-nz = 5; % number of layers in z-axis
-dz = Lz/nz; % thickness of each layer
-thick = dz .* ones(nz, 1); % thickness vector
-G = makeLayeredGrid(G, thick); % extrude grid
-G = computeGeometry(G); % compute geometry
+Lz = 15 * milli * meter;              % thickness of the Petri-dish
+nz = 5;                               % number of layers in z-axis
+dz = Lz/nz;                           % thickness of each layer
+thick = dz .* ones(nz, 1);            % thickness vector
+G = makeLayeredGrid(G, thick);        % extrude grid
+G = computeGeometry(G);               % compute geometry
 
 % Plotting grid
 newplot; plotGrid(G, 'FaceColor', [.8, .8, .8]); 
 axis off equal; view([-9, 33]); 
 
 %% Extracting grid information
-Nc = G.cells.num; % total number of cells
-Nf = G.faces.num; % total number of faces
-Nd = G.griddim; % grid dimension
-A = G.faces.areas; % face areas
-xc = G.cells.centroids(:, 1); % cell centers in x-direction
-yc = G.cells.centroids(:, 2); % cell centers in y-direction 
-zf = G.faces.centroids(:, 3); % face centers in z-direction
-zetaf = Lz - zf; % face centers of elev. head
+Nc    = G.cells.num;    % total number of cells
+Nf    = G.faces.num;    % total number of faces
+Nd    = G.griddim;      % grid dimension
+A     = G.faces.areas;  % face areas
+xc    = G.cells.centroids(:, 1);  % cell centers in x-direction
+yc    = G.cells.centroids(:, 2);  % cell centers in y-direction 
+zf    = G.faces.centroids(:, 3);  % face centers in z-direction
+zetaf = Lz - zf;  % face centers of elev. head
 
-fNei = G.faces.neighbors; % extracting faces neighbors
+fNei  = G.faces.neighbors; % extracting faces neighbors
 ext_f = find(((fNei(:,1) == 0) + (fNei(:,2) == 0)) == 1); % external faces
-z_min = find(zf == 0); % idx of top faces
-z_max = find(zf > 0.9999*Lz & zf < 1.0001*Lz );  % idx of bottom faces
-sides = ext_f(~ismember(ext_f, [z_min; z_max])); % idx of sides faces
+z_min = find(zf == 0);     % idx of top faces
+z_max = find(zf > 0.9999*Lz & zf < 1.0001*Lz );   % idx of bottom faces
+sides = ext_f(~ismember(ext_f, [z_min; z_max]));  % idx of sides faces
 
 %% Physical parameters
 phys = struct(); % create structure to store physical properties
@@ -125,14 +125,14 @@ bcMech = addBC(bcMech, z_max, 'pressure', 0); % u=0 at the bottom
 bcMechVals = zeros(Nd * Nf, 1);
 
 % Setting lateral faces as zero displacement 
-bcMechVals(Nd * sides-2) = 0; % ux = 0 at the sides
-bcMechVals(Nd * sides-1) = 0; % uy = 0 at the sides
-bcMechVals(Nd * sides) = 0;   % uz = 0 at the sides
+bcMechVals(Nd * sides-2) = 0;  % ux = 0 at the sides
+bcMechVals(Nd * sides-1) = 0;  % uy = 0 at the sides
+bcMechVals(Nd * sides)   = 0;  % uz = 0 at the sides
 
 % Setting bottom layer as zero displacement
-bcMechVals(Nd * z_max-2) = 0; % ux = 0 at the bottom
-bcMechVals(Nd * z_max-1) = 0; % uy = 0 at the bottom
-bcMechVals(Nd * z_max) = 0;   % uz = 0 at the bottom
+bcMechVals(Nd * z_max-2) = 0;  % ux = 0 at the bottom
+bcMechVals(Nd * z_max-1) = 0;  % uy = 0 at the bottom
+bcMechVals(Nd * z_max)   = 0;  % uz = 0 at the bottom
 
 % FLOW BOUNDARY CONDITONS
 
@@ -142,18 +142,18 @@ bcMechVals(Nd * z_max) = 0;   % uz = 0 at the bottom
 % top face. Note that we mulitply by the viscosity since the 
 % treatment of the boundary conditions for the mpfa routine assumes
 % unit viscosity.
-vMax = 6E-07 * meter / second; % maximum evaporation velocity
+vMax = 6E-07 * meter / second;              % maximum evaporation velocity
 Qtop_f = vMax .* phys.flow.mu .* A(z_min);  % Top boundary flux
 
 % Creating the boundary structure for flux-controlled BC
-bcFlow_f = addBC([], z_min, 'flux', Qtop_f);     
+bcFlow_f     = addBC([], z_min, 'flux', Qtop_f);     
 bcFlowVals_f = zeros(Nf, 1); 
 bcFlowVals_f(z_min) = Qtop_f;                        
 
 % PRESSURE CONTROLLED BOUNDARY CONDITIONS
 
 % Creating the boundary structure for pressure-controlled BC
-bcFlow_p = addBC([], z_min, 'pressure', p_crit);  
+bcFlow_p     = addBC([], z_min, 'pressure', p_crit);  
 bcFlowVals_p = zeros(Nf, 1);                          
 bcFlowVals_p(z_min) = p_crit + phys.flow.gamma .* zetaf(z_min);                             
 % The second term of the above equation represents the gravity 
@@ -178,21 +178,22 @@ mpfa_discr_pres = mpfa(G, phys.flow, [], 'invertBlocks', 'matlab', ...
     'bc', bcFlow_p);
 
 %% Time parameters
-time_param = struct(); % initialize structure to store parameters
-time_param.simTime = 2 * hour; % final simulation time
-time_param.tau_init = 25 * second; % initial time step
-time_param.tau_min = 25 * second; % minimum time step
-time_param.tau_max = 1000 * second; % maximum time step
-time_param.tau = time_param.tau_init; % initializing time step
-time_param.time = 0; % initializing cumulative time
+time_param = struct();                 % initialize time struct param
+time_param.simTime = 2 * hour;         % final simulation time
+time_param.dt_init = 25 * second;     % initial time step
+time_param.dt_min = 25 * second;      % minimum time step
+time_param.dt_max = 1000 * second;    % maximum time step
+time_param.dt = time_param.dt_init;  % initializing time step
+time_param.time = 0;                   % initializing cumulative time
 
 %% Printing parameters
-print_param = struct(); % initialize structure to store parameters
+print_param = struct();  % initialize structure to store parameters
 print_param.levels = 50; % number of printed levels
 print_param.times  = ((time_param.simTime/print_param.levels) : ...
     (time_param.simTime/print_param.levels):time_param.simTime)';
-print_param.print = 1; % initializing print counter
-print_param.export = 1; % intializing export counter
+print_param.print = 1;   % initializing print counter
+print_param.export = 1;  % intializing export counter
+sol = cell(print_param.levels, 1); % store solutions in the sol cell
 
 %% Calling the model for the unsaturated poroelastic equations
 
@@ -205,34 +206,34 @@ modelEqsPres = modelUnsatBiot(G, phys, mpfa_discr_pres, mpsa_discr, ...
     bcFlow_p, bcFlowVals_p, bcMech, bcMechVals, 'upstream', 'on');
 
 %% Solution structure
-sol.time = zeros(print_param.levels, 1); 
-sol.u = cell(print_param.levels, 1); 
-sol.p = cell(print_param.levels, 1); 
-sol.pTop = zeros(print_param.levels, 1); 
-sol.Sw = cell(print_param.levels, 1); 
-sol.traction = cell(print_param.levels, 1); 
-sol.flux = cell(print_param.levels, 1); 
+% sol.time = zeros(print_param.levels, 1); 
+% sol.u = cell(print_param.levels, 1); 
+% sol.p = cell(print_param.levels, 1); 
+% sol.pTop = zeros(print_param.levels, 1); 
+% sol.Sw = cell(print_param.levels, 1); 
+% sol.traction = cell(print_param.levels, 1); 
+% sol.flux = cell(print_param.levels, 1); 
 
 %% Flux controlled time loop
-solver_param = struct(); % initialize structure to store solver parameters
-solver_param.tol = 1E-8; % tolerance
-solver_param.maxIter = 10; % maximum number of iterations
-pControlled = false; % boolean to check bc control status
-p = p_init; % current value of pressure
-p_act = p; % actual value of pressure
-u = u_init; % current value of displacement
-p_top = min(p_init); % initial top pressure value
+solver_param = struct();    % initialize structure to store solver parameters
+solver_param.tol = 1E-8;    % tolerance
+solver_param.maxIter = 10;  % maximum number of iterations
+pControlled = false;        % boolean to check bc control status
+p = p_init;                 % current value of pressure
+p_act = p;                  % actual value of pressure
+u = u_init;                 % current value of displacement
+p_top = min(p_init);        % initial top pressure value
 
 while (time_param.time < time_param.simTime) && (p_top > p_crit) ...
         && (pControlled == false)
       
-    p_n = p; % current time level (n-index) 
-    u_n = u; % current time level (n-index)
-    time_param.time = time_param.time + time_param.tau; % cumulative time
+    p_n = p;  % current time level (n-index) 
+    u_n = u;  % current time level (n-index)
+    time_param.time = time_param.time + time_param.dt; % cumulative time
     
     % Source terms
-    sourceFlow = zeros(Nc, 1); % no sources for the flow
-    sourceMech = modelEqsFlux.body(p_n); % sourceMech = body force
+    sourceFlow = zeros(Nc, 1);  % no sources for the flow
+    sourceMech = modelEqsFlux.body(p_n);  % sourceMech = body force
     
     % Calling Newton solver
     [p, p_m, u, iter] = solverUnsatBiot(G, p_n, u_n, modelEqsFlux, ...
@@ -240,13 +241,13 @@ while (time_param.time < time_param.simTime) && (p_top > p_crit) ...
     
     % Approximating top pressure
     fluxTemp = modelEqsFlux.Q(p, p_m);
-    p_top = computeTopPressure(G, phys, p, fluxTemp, modelEqsFlux);
+    p_top    = computeTopPressure(G, phys, p, fluxTemp, modelEqsFlux);
     
     % If it is flux controlled, update time step and store solution
     if (p_top > p_crit)
         
-        % Calling time stepping routine
-        [time_param.tau, print_param.print] = timeStepping(time_param, ...
+        % Calling time-stepping routine
+        [time_param.dt, print_param.print] = timeStepping(time_param, ...
             print_param, iter);
         
         % Actual pressure
@@ -254,28 +255,30 @@ while (time_param.time < time_param.simTime) && (p_top > p_crit) ...
         
         % Storing solutions
         if time_param.time == print_param.times(print_param.export)
-            sol.time(print_param.export,1) = time_param.time;
-            sol.u{print_param.export,1} = u;
-            sol.p{print_param.export,1} = p_act;
-            sol.pTop(print_param.export,1) = p_top;
-            sol.Sw{print_param.export,1} = modelEqsFlux.S_w(p_act);
-            sol.traction{print_param.export,1} = modelEqsFlux.T(u);
-            sol.flux{print_param.export,1} = modelEqsFlux.Q(p_act, p_m);
+            sol{print_param.export} = struct( ...
+                'time', time_param.time, ...
+                'displacement', u, ...
+                'pressure', p_act, ...
+                'topPressure', p_top, ...
+                'saturation', modelEqsFlux.S_w(p_act), ...
+                'tractionForce', modelEqsFlux.T(u), ...
+                'flux', modelEqsFlux.Q(p_act, p_m) ...
+            );
             print_param.export = print_param.export + 1;
         end
         
     % If we reach the critical pressure, change to pressure controlled
     else
         fprintf('\n Changing from flux to pressure bc at %.1f [s]  \n\n', ...
-            time_param.time - time_param.tau);
+            time_param.time - time_param.dt);
         pause(1);
         if print_param.print > 1 && ...
                 print_param.times(print_param.print-1) == time_param.time
             print_param.print = print_param.print - 1;
         end
-        time_param.time = time_param.time - time_param.tau; % back one step
+        time_param.time = time_param.time - time_param.dt; % back one step
         pControlled = true;
-        time_param.tau = time_param.tau_min;
+        time_param.dt = time_param.dt_min;
     end
 end
 
@@ -284,7 +287,7 @@ while (time_param.time < time_param.simTime) && (pControlled == true)
     
     p_n = p_act; % current time level (n-index) 
     u_n = u; % current time level (n-index)
-    time_param.time = time_param.time + time_param.tau; % cumulative time
+    time_param.time = time_param.time + time_param.dt; % cumulative time
     
     % Source terms
     sourceFlow = zeros(Nc, 1); % no sources for the flow
@@ -299,36 +302,35 @@ while (time_param.time < time_param.simTime) && (pControlled == true)
     p_top = computeTopPressure(G, phys, p_act, fluxTemp, modelEqsPres);
 
     % Calling time stepping routine
-    [time_param.tau, print_param.print] = timeStepping(time_param, ...
+    [time_param.dt, print_param.print] = timeStepping(time_param, ...
         print_param, iter);
     
-    % Storing solutions
-    if time_param.time == print_param.times(print_param.export)
-        sol.time(print_param.export,1) = time_param.time;
-        sol.u{print_param.export,1} = u;
-        sol.p{print_param.export,1} = p_act;
-        sol.pTop(print_param.export,1) = p_crit;
-        sol.Sw{print_param.export,1} = modelEqsPres.S_w(p_act);
-        sol.traction{print_param.export,1} = modelEqsPres.T(u);
-        sol.flux{print_param.export,1} = modelEqsPres.Q(p, p_m);
-        print_param.export = print_param.export + 1;
-    end
+        % Storing solutions
+        if time_param.time == print_param.times(print_param.export)
+            sol{print_param.export} = struct( ...
+                'time', time_param.time, ...
+                'displacement', u, ...
+                'pressure', p_act, ...
+                'topPressure', p_crit, ...
+                'saturation', modelEqsPres.S_w(p_act), ...
+                'tractionForce', modelEqsPres.T(u), ...
+                'flux', modelEqsPres.Q(p_act, p_m) ...
+            );
+            print_param.export = print_param.export + 1;
+        end
     
 end
 
-% Displaying "sol" structure
-fprintf('sol\n'); disp(sol);
-
 %% Pressure plot
-clf; minP = min(sol.p{end,1}); out = 1; 
-for ii=1:length(sol.time)
+clf; minP = min(sol{end}.pressure); out = 1; 
+for ii=1:print_param.levels
     newplot; 
-    plotCellData(G, sol.p{ii,1}); % plotting data/creating handle
+    plotCellData(G, sol{ii}.pressure); % plotting data/creating handle
     t_h=handle(text('Units','normalized', ... % Use [%] of the axis length
                     'Position',[.71,1.05,1], ... % Position of text   
                     'EdgeColor','k', ... % Textbox 
                     'FontSize', 13)); % Font size 
-    t_h.String=sprintf('Time [hours]: %2.2f',sol.time(ii)/hour); % print time counter             
+    t_h.String=sprintf('Time [hours]: %2.2f',sol{ii}.time/hour); % print time counter             
     axis equal off; view([-171 36]); cb = colorbar('South'); cb.FontSize=13; caxis([minP 0])
     title('p_w [Pa]','FontSize',15); set(gcf,'color','w');
     pause(0.01); out = out + 1;
@@ -337,14 +339,14 @@ end
 
 %% Saturation plot
 clf; maxS = 1; minS = phys.flow.S_r; out = 1; 
-for ii=1:length(sol.time)
+for ii=1:print_param.levels
     newplot;
-    plotCellData(G, sol.Sw{ii,1}); % plotting data/creating handle
+    plotCellData(G, sol{ii}.saturation); % plotting data/creating handle
     t_h=handle(text('Units','normalized', ... % Use [%] of the axis length
                     'Position',[.71,1.05,1], ... % Position of text   
                     'EdgeColor','k', ... % Textbox 
                     'FontSize', 13)); % Font size 
-    t_h.String=sprintf('Time [hours]: %2.2f',sol.time(ii)/hour); % print time counter             
+    t_h.String=sprintf('Time [hours]: %2.2f',sol{ii}.time/hour); % print time counter             
     axis equal off; view([-171 36]); cb=colorbar('South'); cb.FontSize=13; caxis([minS maxS])
     title('S_w [ - ]','FontSize',15); set(gcf,'color','w');
     pause(0.01); out = out + 1; 
@@ -352,20 +354,21 @@ for ii=1:length(sol.time)
 end
 
 %% Displacement plot
-clf; u_mag = cell(length(sol.time), 1);
-for ii=1:length(sol.time)
-    u_mag{ii,1} = sqrt(sol.u{ii,1}(1:Nd:end).^2 ...
-        + sol.u{ii,1}(2:Nd:end).^2 + sol.u{ii,1}(3:Nd:end).^2);
+clf; u_mag = cell(print_param.levels, 1);
+for ii=1:print_param.levels
+    u_mag{ii} = sqrt(sol{ii}.displacement(1:Nd:end).^2 ...
+        + sol{ii}.displacement(2:Nd:end).^2 ...
+        + sol{ii}.displacement(3:Nd:end).^2);
 end
-maxU = max(u_mag{end,1})/milli; minU = 0; out = 1; newplot;
-for ii=1:length(sol.time)
+maxU = max(u_mag{end}) / milli; minU = 0; out = 1; newplot;
+for ii=1:print_param.levels
     newplot;
-    plotCellData(G, u_mag{ii,1}/milli); % plotting data/creating handle
+    plotCellData(G, u_mag{ii,1} / milli); % plotting data/creating handle
     t_h=handle(text('Units','normalized',... % Use [%] of the axis length
                      'Position',[.75,1.05,1],... % Position of text   
                      'EdgeColor','k',... % Textbox 
                      'FontSize', 13)); % Font size 
-    t_h.String=sprintf('Time [hours]: %2.2f',sol.time(ii)/hour); % print "time" counter             
+    t_h.String=sprintf('Time [hours]: %2.2f',sol{ii}.time / hour); % print "time" counter             
     xlabel('x [m]'); ylabel('y [m]'); zlabel('Depth [m]');
     axis equal off; view([-171 36]); cb=colorbar('South'); cb.FontSize=13; caxis([minU maxU])
     title('|| u || [mm]','FontSize',15); box on; set(gcf,'color','w');
@@ -375,28 +378,30 @@ end
 
 %% Top pressure and fluxes plots
 clf; newplot; 
-fluxTopPlot = zeros(length(sol.time),1);
-psiTopPlot = zeros(length(sol.time),1);
-for ii=1:length(sol.time)
-    fluxTopPlot(ii,1) = sum(abs(sol.flux{ii,1}(z_min)) / milli^3);
-    psiTopPlot(ii,1) = (sol.pTop(ii,1)/phys.flow.gamma);
+fluxTopPlot = zeros(print_param.levels, 1);
+psiTopPlot  = zeros(print_param.levels, 1);
+for ii=1:print_param.levels
+    fluxTopPlot(ii) = sum(abs(sol{ii}.flux(z_min)) / milli^3);
+    psiTopPlot(ii)  = (sol{ii}.topPressure / phys.flow.gamma);
 end
+
 subplot(1,2,1);
-plot(sol.time/hour,psiTopPlot,'r.-','LineWidth',2,'MarkerSize',15);
+plot(print_param.times / hour, psiTopPlot,'r.-','LineWidth',2,'MarkerSize',15);
 axis tight; grid on; box on;
 xlabel('Time [hours]'); a = get(gca,'XTickLabel'); set(gca,'XTickLabel',a,'FontSize',14)
 ylabel('\psi_w^{top} [m]  (x10^4)'); b = get(gca,'YTickLabel'); set(gca,'YTickLabel',b,'FontSize',14)
+
 subplot(1,2,2);
-plot(sol.time/hour,fluxTopPlot,'r.-','LineWidth',2,'MarkerSize',15);
+plot(print_param.times / hour, fluxTopPlot,'r.-','LineWidth',2,'MarkerSize',15);
 axis tight; grid on; box on;
 xlabel('Time [hours]'); a = get(gca,'XTickLabel'); set(gca,'XTickLabel',a,'FontSize',14)
 ylabel('Q_w^{top}  [mm^3/s]'); b = get(gca,'YTickLabel'); set(gca,'YTickLabel',b,'FontSize',14)
 
 %% Quiver plot of displacement field
 clf; newplot;
-ux = sol.u{end}(1:Nd:end); uxTop = ux(1:G.layerSize);
-uy = sol.u{end}(2:Nd:end); uyTop = uy(1:G.layerSize);
-plotCellData(G, u_mag{end,1}/milli, 1:G.layerSize); 
+ux = sol{end}.displacement(1:Nd:end); uxTop = ux(1:G.layerSize);
+uy = sol{end}.displacement(2:Nd:end); uyTop = uy(1:G.layerSize);
+plotCellData(G, u_mag{end, 1} /milli, 1:G.layerSize); 
 axis equal off; view([0 90]); colormap('gray');
 cb=colorbar('EastOutside'); cb.FontSize=13; caxis([minU maxU])
 title('|| u || [mm]','FontSize',15); box on; set(gcf,'color','w'); hold on;
