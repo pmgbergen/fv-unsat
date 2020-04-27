@@ -101,7 +101,7 @@ mpfa_discr = mpfa(G, phys.flow, [], 'bc', bc, 'invertBlocks', 'matlab');
 time_param = struct();  % initializing structure to store parameters
 time_param.initial = 0; % initial simulation time
 time_param.simTime = 1; % final simulation time  
-time_param.tau = time_param.simTime/timeLevels; % constant time step
+time_param.dt = time_param.simTime/timeLevels; % constant time step
 time_param.time = 0; % current time
 
 % Retrieving analytical forms: Note that these are stored as function
@@ -121,7 +121,7 @@ solver_param.tol = 1E-8; % tolerance
 solver_param.maxIter = 10; % maximum number of iterations
 
 psi = psi_init; % current pressure head
-time_param.time = time_param.tau; % current time
+time_param.time = time_param.dt; % current time
 
 while time_param.time < time_param.simTime
 
@@ -132,7 +132,7 @@ while time_param.time < time_param.simTime
     [psi, psi_m, ~] = solverRE(psi_n, modelEqs, time_param, ...
         solver_param, source);
     
-    time_param.time  = time_param.time + time_param.tau; % increase time
+    time_param.time  = time_param.time + time_param.dt; % increase time
 
 end
 
