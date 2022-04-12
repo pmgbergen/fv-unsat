@@ -35,8 +35,8 @@ For an introduction to MPSA:
 * If you are using an MRST version <= 2019b, you will have to clone the [fvbiot](https://github.com/pmgbergen/fvbiot) repository, and replace it manually in your MRST folder. Note that fvbiot is located inside the "modules" folder.
 
 ## Cite
-If you use fv-unsat, please cite:
-Varela, J., Gasda, S., Keilegavlen, E., & Nordbotten, J. (2021). A Finite-Volume-Based Module for Unsaturated Poroelasticity. In K. Lie & O. Møyner (Eds.), Advanced Modeling with the MATLAB Reservoir Simulation Toolbox (pp. 515-548). Cambridge: Cambridge University Press. doi:10.1017/9781009019781.019
+If you use fv-unsat, we kindly ask you to cite:
+* Varela, J., Gasda, S., Keilegavlen, E., & Nordbotten, J. (2021). A Finite-Volume-Based Module for Unsaturated Poroelasticity. In K. Lie & O. Møyner (Eds.), Advanced Modeling with the MATLAB Reservoir Simulation Toolbox (pp. 515-548). Cambridge: Cambridge University Press. [doi:10.1017/9781009019781.019](https://doi.org/10.1017/9781009019781.019)
 
 ## Contact
 Jhabriel Varela (jhabriel.varela@uib.no).
